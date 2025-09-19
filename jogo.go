@@ -20,11 +20,6 @@ type Posicao struct {
 	X, Y int
 }
 
-type BotaoPosicao struct {
-	X, Y  int
-	Ativo bool
-}
-
 type Movimento struct {
 	DeX, DeY     int       // posição atual
 	ParaX, ParaY int       // nova posição
@@ -38,7 +33,6 @@ type Jogo struct {
 	UltimoVisitado Elemento     // elemento que estava na posição do personagem antes de mover
 	StatusMsg      string       // mensagem para a barra de status
 	Inimigos       []Posicao    // posições atuais dos inimigos
-	BotaoAtivo     bool         // novo: indica se o botao já foi ativado
 }
 
 // Elementos visuais do jogo
@@ -48,7 +42,6 @@ var (
 	Parede     = Elemento{'▤', CorParede, CorFundoParede, true}
 	Vegetacao  = Elemento{'♣', CorVerde, CorPadrao, false}
 	Vazio      = Elemento{' ', CorPadrao, CorPadrao, false}
-	Botao      = Elemento{'☼', CorAmarelo, CorPadrao, false}
 )
 
 // Cria e retorna uma nova instância do jogo
@@ -178,45 +171,5 @@ func gerenciarMapa(jogo *Jogo, canal chan Movimento) {
 		} else if mov.Result != nil {
 			mov.Result <- false
 		}
-	}
-}
-
-func botaoControle(jogo *Jogo, canal chan Movimento, duracao time.Duration, intervalo time.Duration) {
-	for {
-		// Se o portal já foi coletado, termina a goroutine
-		if jogo.BotaoAtivo {
-			return
-		}
-
-		// Espera antes de colocar o portal
-		time.Sleep(intervalo)
-
-		// Confirma novamente antes de criar
-		if jogo.BotaoAtivo {
-			return
-		}
-
-		// Escolhe posição vazia
-		var x, y int
-		for {
-			x = rand.Intn(len(jogo.Mapa[0]))
-			y = rand.Intn(len(jogo.Mapa))
-			if jogo.Mapa[y][x] == Vazio {
-				break
-			}
-		}
-
-		// Coloca o portal no mapa
-		jogo.Mapa[y][x] = Botao
-
-		// Cria timer para remover o portal após duracao
-		timer := time.NewTimer(duracao)
-		go func(px, py int) {
-			<-timer.C
-			// remove somente se não foi coletado
-			if !jogo.BotaoAtivo && jogo.Mapa[py][px] == Botao {
-				jogo.Mapa[py][px] = Vazio
-			}
-		}(x, y)
 	}
 }

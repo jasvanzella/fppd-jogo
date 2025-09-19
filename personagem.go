@@ -46,11 +46,6 @@ func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
 		// Move o personagem com base na tecla
 		personagemMover(ev.Tecla, jogo)
 	}
-	if jogo.Mapa[jogo.PosY][jogo.PosX] == Botao {
-		// jogador pegou o portal
-		jogo.BotaoAtivo = true // marca que o portal foi coletado
-		// o Botao permanece no mapa para mostrar que foi ativado
-		// jogo.Mapa[jogo.PosY][jogo.PosX] = Vazio // NÃO remove, deixa na tela
-	}
+	
 	return true // Continua o jogo
 }
