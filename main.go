@@ -1,7 +1,10 @@
 // main.go - Loop principal do jogo
 package main
 
-import "os"
+import (
+	"os"
+	"time"
+)
 
 func main() {
 	// Inicializa a interface (termbox)
@@ -23,9 +26,24 @@ func main() {
 	// Desenha o estado inicial do jogo
 	interfaceDesenharJogo(&jogo)
 
+	// --- Cria o canal de movimento aqui ---
+	var canalMovimento = make(chan Movimento)
+
+	// Inicia a goroutine que gerencia todas as alterações do mapa
+	go gerenciarMapa(&jogo, canalMovimento)
+
 	for _, inimigo := range jogo.Inimigos {
-		go moverInimigo(&jogo, inimigo.X, inimigo.Y)
+		go moverInimigo(inimigo.X, inimigo.Y, canalMovimento)
 	}
+
+	// --- Inicia a goroutine que redesenha a tela continuamente ---
+	go func() {
+		for {
+			time.Sleep(100 * time.Millisecond) // atualiza a cada 0.1s
+			interfaceDesenharJogo(&jogo)
+		}
+	}()
+
 	// Loop principal de entrada
 	for {
 		evento := interfaceLerEventoTeclado()

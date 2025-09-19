@@ -20,6 +20,12 @@ type Posicao struct {
 	X, Y int
 }
 
+type Movimento struct {
+	DeX, DeY     int       // posição atual
+	ParaX, ParaY int       // nova posição
+	Result       chan bool // opcional: confirma se a movimentação deu certo
+}
+
 // Jogo contém o estado atual do jogo
 type Jogo struct {
 	Mapa           [][]Elemento // grade 2D representando o mapa
@@ -40,9 +46,10 @@ var (
 
 // Cria e retorna uma nova instância do jogo
 func jogoNovo() Jogo {
-	// O ultimo elemento visitado é inicializado como vazio
-	// pois o jogo começa com o personagem em uma posição vazia
-	return Jogo{UltimoVisitado: Vazio}
+	return Jogo{
+		UltimoVisitado: Vazio,
+		Inimigos:       []Posicao{}, // garante que não tem inimigos extras
+	}
 }
 
 // Lê um arquivo texto linha por linha e constrói o mapa do jogo
@@ -116,31 +123,53 @@ func jogoMoverElemento(jogo *Jogo, x, y, dx, dy int) {
 }
 
 // moverInimigo faz o inimigo se mover sozinho em intervalos de tempo
-func moverInimigo(jogo *Jogo, x, y int) {
-	for {
-		time.Sleep(time.Second) // espera 1 segundo
+func moverInimigo(x, y int, canal chan Movimento) {
+    for {
+        time.Sleep(time.Second)
 
-		// escolhe uma direção aleatória
-		dx, dy := 0, 0
-		switch rand.Intn(4) {
-		case 0:
-			dx = 1 // direita
-		case 1:
-			dx = -1 // esquerda
-		case 2:
-			dy = 1 // baixo
-		case 3:
-			dy = -1 // cima
-		}
-		nx, ny := x+dx, y+dy
-		// se dentro do mapa e célula estiver vazia
-		if ny >= 0 && ny < len(jogo.Mapa) && nx >= 0 && nx < len(jogo.Mapa[0]) {
-			if !jogo.Mapa[ny][nx].tangivel {
-				jogo.Mapa[y][x] = Vazio
-				jogo.Mapa[ny][nx] = Inimigo
-				x, y = nx, ny
-				interfaceDesenharJogo(jogo)
+        dx, dy := 0, 0
+        switch rand.Intn(4) {
+        case 0:
+            dx = 1
+        case 1:
+            dx = -1
+        case 2:
+            dy = 1
+        case 3:
+            dy = -1
+        }
+        nx, ny := x+dx, y+dy
+        // envia pedido de movimentação
+        result := make(chan bool)
+        canal <- Movimento{
+            DeX: x, DeY: y,
+            ParaX: nx, ParaY: ny,
+            Result: result,
+        }
+
+        // só atualiza as coordenadas se o movimento foi permitido
+        if <-result {
+            x, y = nx, ny
+        }
+    }
+}
+
+func gerenciarMapa(jogo *Jogo, canal chan Movimento) {
+	for mov := range canal {
+		// verifica se a posição de destino é válida
+		if mov.ParaY >= 0 && mov.ParaY < len(jogo.Mapa) &&
+			mov.ParaX >= 0 && mov.ParaX < len(jogo.Mapa[0]) &&
+			!jogo.Mapa[mov.ParaY][mov.ParaX].tangivel {
+
+			// move o inimigo
+			jogo.Mapa[mov.DeY][mov.DeX] = Vazio
+			jogo.Mapa[mov.ParaY][mov.ParaX] = Inimigo
+
+			if mov.Result != nil {
+				mov.Result <- true
 			}
+		} else if mov.Result != nil {
+			mov.Result <- false
 		}
 	}
 }
