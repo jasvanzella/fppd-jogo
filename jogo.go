@@ -20,6 +20,11 @@ type Posicao struct {
 	X, Y int
 }
 
+type BotaoPosicao struct {
+	X, Y  int
+	Ativo bool
+}
+
 type Movimento struct {
 	DeX, DeY     int       // posição atual
 	ParaX, ParaY int       // nova posição
@@ -33,6 +38,7 @@ type Jogo struct {
 	UltimoVisitado Elemento     // elemento que estava na posição do personagem antes de mover
 	StatusMsg      string       // mensagem para a barra de status
 	Inimigos       []Posicao    // posições atuais dos inimigos
+	BotaoAtivo     bool         // novo: indica se o botao já foi ativado
 }
 
 // Elementos visuais do jogo
@@ -42,6 +48,7 @@ var (
 	Parede     = Elemento{'▤', CorParede, CorFundoParede, true}
 	Vegetacao  = Elemento{'♣', CorVerde, CorPadrao, false}
 	Vazio      = Elemento{' ', CorPadrao, CorPadrao, false}
+	Botao      = Elemento{'☼', CorAmarelo, CorPadrao, false}
 )
 
 // Cria e retorna uma nova instância do jogo
@@ -124,34 +131,34 @@ func jogoMoverElemento(jogo *Jogo, x, y, dx, dy int) {
 
 // moverInimigo faz o inimigo se mover sozinho em intervalos de tempo
 func moverInimigo(x, y int, canal chan Movimento) {
-    for {
-        time.Sleep(time.Second)
+	for {
+		time.Sleep(time.Second)
 
-        dx, dy := 0, 0
-        switch rand.Intn(4) {
-        case 0:
-            dx = 1
-        case 1:
-            dx = -1
-        case 2:
-            dy = 1
-        case 3:
-            dy = -1
-        }
-        nx, ny := x+dx, y+dy
-        // envia pedido de movimentação
-        result := make(chan bool)
-        canal <- Movimento{
-            DeX: x, DeY: y,
-            ParaX: nx, ParaY: ny,
-            Result: result,
-        }
+		dx, dy := 0, 0
+		switch rand.Intn(4) {
+		case 0:
+			dx = 1
+		case 1:
+			dx = -1
+		case 2:
+			dy = 1
+		case 3:
+			dy = -1
+		}
+		nx, ny := x+dx, y+dy
+		// envia pedido de movimentação
+		result := make(chan bool)
+		canal <- Movimento{
+			DeX: x, DeY: y,
+			ParaX: nx, ParaY: ny,
+			Result: result,
+		}
 
-        // só atualiza as coordenadas se o movimento foi permitido
-        if <-result {
-            x, y = nx, ny
-        }
-    }
+		// só atualiza as coordenadas se o movimento foi permitido
+		if <-result {
+			x, y = nx, ny
+		}
+	}
 }
 
 func gerenciarMapa(jogo *Jogo, canal chan Movimento) {
@@ -171,5 +178,45 @@ func gerenciarMapa(jogo *Jogo, canal chan Movimento) {
 		} else if mov.Result != nil {
 			mov.Result <- false
 		}
+	}
+}
+
+func botaoControle(jogo *Jogo, canal chan Movimento, duracao time.Duration, intervalo time.Duration) {
+	for {
+		// Se o portal já foi coletado, termina a goroutine
+		if jogo.BotaoAtivo {
+			return
+		}
+
+		// Espera antes de colocar o portal
+		time.Sleep(intervalo)
+
+		// Confirma novamente antes de criar
+		if jogo.BotaoAtivo {
+			return
+		}
+
+		// Escolhe posição vazia
+		var x, y int
+		for {
+			x = rand.Intn(len(jogo.Mapa[0]))
+			y = rand.Intn(len(jogo.Mapa))
+			if jogo.Mapa[y][x] == Vazio {
+				break
+			}
+		}
+
+		// Coloca o portal no mapa
+		jogo.Mapa[y][x] = Botao
+
+		// Cria timer para remover o portal após duracao
+		timer := time.NewTimer(duracao)
+		go func(px, py int) {
+			<-timer.C
+			// remove somente se não foi coletado
+			if !jogo.BotaoAtivo && jogo.Mapa[py][px] == Botao {
+				jogo.Mapa[py][px] = Vazio
+			}
+		}(x, y)
 	}
 }

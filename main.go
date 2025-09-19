@@ -36,6 +36,9 @@ func main() {
 		go moverInimigo(inimigo.X, inimigo.Y, canalMovimento)
 	}
 
+	// Portal aparece a cada 5 segundos e fica ativo por 3 segundos
+	go botaoControle(&jogo,canalMovimento,8*time.Second, 5*time.Second)
+
 	// --- Inicia a goroutine que redesenha a tela continuamente ---
 	go func() {
 		for {
