@@ -23,6 +23,9 @@ func main() {
 	// Desenha o estado inicial do jogo
 	interfaceDesenharJogo(&jogo)
 
+	for _, inimigo := range jogo.Inimigos {
+		go moverInimigo(&jogo, inimigo.X, inimigo.Y)
+	}
 	// Loop principal de entrada
 	for {
 		evento := interfaceLerEventoTeclado()

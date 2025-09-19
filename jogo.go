@@ -3,23 +3,30 @@ package main
 
 import (
 	"bufio"
+	"math/rand"
 	"os"
+	"time"
 )
 
 // Elemento representa qualquer objeto do mapa (parede, personagem, vegetação, etc)
 type Elemento struct {
-	simbolo   rune
-	cor       Cor
-	corFundo  Cor
-	tangivel  bool // Indica se o elemento bloqueia passagem
+	simbolo  rune
+	cor      Cor
+	corFundo Cor
+	tangivel bool // Indica se o elemento bloqueia passagem
+}
+
+type Posicao struct {
+	X, Y int
 }
 
 // Jogo contém o estado atual do jogo
 type Jogo struct {
-	Mapa            [][]Elemento // grade 2D representando o mapa
-	PosX, PosY      int          // posição atual do personagem
-	UltimoVisitado  Elemento     // elemento que estava na posição do personagem antes de mover
-	StatusMsg       string       // mensagem para a barra de status
+	Mapa           [][]Elemento // grade 2D representando o mapa
+	PosX, PosY     int          // posição atual do personagem
+	UltimoVisitado Elemento     // elemento que estava na posição do personagem antes de mover
+	StatusMsg      string       // mensagem para a barra de status
+	Inimigos       []Posicao    // posições atuais dos inimigos
 }
 
 // Elementos visuais do jogo
@@ -58,6 +65,7 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 				e = Parede
 			case Inimigo.simbolo:
 				e = Inimigo
+				jogo.Inimigos = append(jogo.Inimigos, Posicao{x, y}) // adiciona a posição do inimigo
 			case Vegetacao.simbolo:
 				e = Vegetacao
 			case Personagem.simbolo:
@@ -102,7 +110,37 @@ func jogoMoverElemento(jogo *Jogo, x, y, dx, dy int) {
 	// Obtem elemento atual na posição
 	elemento := jogo.Mapa[y][x] // guarda o conteúdo atual da posição
 
-	jogo.Mapa[y][x] = jogo.UltimoVisitado     // restaura o conteúdo anterior
-	jogo.UltimoVisitado = jogo.Mapa[ny][nx]   // guarda o conteúdo atual da nova posição
-	jogo.Mapa[ny][nx] = elemento              // move o elemento
+	jogo.Mapa[y][x] = jogo.UltimoVisitado   // restaura o conteúdo anterior
+	jogo.UltimoVisitado = jogo.Mapa[ny][nx] // guarda o conteúdo atual da nova posição
+	jogo.Mapa[ny][nx] = elemento            // move o elemento
+}
+
+// moverInimigo faz o inimigo se mover sozinho em intervalos de tempo
+func moverInimigo(jogo *Jogo, x, y int) {
+	for {
+		time.Sleep(time.Second) // espera 1 segundo
+
+		// escolhe uma direção aleatória
+		dx, dy := 0, 0
+		switch rand.Intn(4) {
+		case 0:
+			dx = 1 // direita
+		case 1:
+			dx = -1 // esquerda
+		case 2:
+			dy = 1 // baixo
+		case 3:
+			dy = -1 // cima
+		}
+		nx, ny := x+dx, y+dy
+		// se dentro do mapa e célula estiver vazia
+		if ny >= 0 && ny < len(jogo.Mapa) && nx >= 0 && nx < len(jogo.Mapa[0]) {
+			if !jogo.Mapa[ny][nx].tangivel {
+				jogo.Mapa[y][x] = Vazio
+				jogo.Mapa[ny][nx] = Inimigo
+				x, y = nx, ny
+				interfaceDesenharJogo(jogo)
+			}
+		}
+	}
 }
