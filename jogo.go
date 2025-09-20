@@ -27,6 +27,13 @@ type Movimento struct {
 	Result       chan bool // opcional: confirma se a movimentação deu certo
 }
 
+type EventoJogo struct {	//novo
+    Tipo  string      // "Movimento", "Portal", "Status"
+    Data any // Pode carregar Movimento, Mensagem ou string
+}
+
+var canalJogo = make(chan EventoJogo, 10) //novo
+
 // Jogo contém o estado atual do jogo
 type Jogo struct {
 	Mapa           [][]Elemento // grade 2D representando o mapa

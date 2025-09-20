@@ -24,35 +24,23 @@ func personagemMover(tecla rune, jogo *Jogo) {
 	}
 }
 
+
 // Define o que ocorre quando o jogador pressiona a tecla de interação
 // Neste exemplo, apenas exibe uma mensagem de status
 // Você pode expandir essa função para incluir lógica de interação com objetos
 // Define o que ocorre quando o jogador pressiona a tecla de interação
-func personagemInteragir(jogo *Jogo) {
+func personagemInteragir(jogo *Jogo, canal chan EventoJogo) {
     // Verifica se está na posição da chave
-    chaveX, chaveY := 5, 5 // posição fixa da chave no mapa
-    if jogo.PosX == chaveX && jogo.PosY == chaveY && !jogo.TemChave {
-        jogo.TemChave = true
-        jogo.StatusMsg = "Você pegou a chave! O portal foi liberado."
-        jogo.Mapa[chaveY][chaveX] = Vazio // remove a chave do mapa
-
-        // Inicializa a rotina do portal (aparece e desaparece)
-        if len(jogo.Portais) > 0 {
-            go rotinaPortal(jogo, &jogo.Portais[0])
-        }
+   if jogo.PosX == 4 && jogo.PosY == 10 && !jogo.TemChave {
+        canal <- EventoJogo{Tipo: "pegarChave"}
         return
     }
 
-    // Agora verifica portais
+    // verifica se está em cima do portal
     for i := range jogo.Portais {
         p := &jogo.Portais[i]
         if p.Ativo && jogo.PosX == p.X && jogo.PosY == p.Y {
-            p.canalMapa <- Mensagem{
-                Tipo: "Teleporte!",
-                PosX: jogo.PosX,
-                PosY: jogo.PosY,
-            }
-            jogo.StatusMsg = "Entrando no portal..."
+            p.canalMapa <- Mensagem{Tipo: "Teleporte!", PosX: jogo.PosX, PosY: jogo.PosY}
             return
         }
     }
@@ -69,7 +57,7 @@ func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
 		return false
 	case "interagir":
 		// Executa a ação de interação
-		personagemInteragir(jogo)
+		personagemInteragir(jogo, canalJogo)
 	case "mover":
 		// Move o personagem com base na tecla
 		personagemMover(ev.Tecla, jogo)

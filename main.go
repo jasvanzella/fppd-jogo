@@ -34,14 +34,12 @@ func main() {
 	// Desenha o estado inicial do jogo
 	interfaceDesenharJogo(&jogo)
 
-
 	// Inicia a goroutine que gerencia todas as alterações do mapa
 	go gerenciarMapa(&jogo, canalMovimento)
 
 	for _, inimigo := range jogo.Inimigos {
 		go moverInimigo(inimigo.X, inimigo.Y, canalMovimento)
 	}
-
 
 	// --- Inicia a goroutine que redesenha a tela continuamente ---
 	go func() {
@@ -59,4 +57,23 @@ func main() {
 		}
 		interfaceDesenharJogo(&jogo)
 	}
+
+	canal := make(chan EventoJogo, 10)
+
+	// goroutine para processar eventos
+	go func() {
+		for ev := range canal {
+			switch ev.Tipo {
+			case "pegarChave":
+				jogo.TemChave = true
+				jogo.StatusMsg = "Você pegou a chave! O portal vai começar a abrir e fechar."
+
+				// ativa o portal
+				for i := range jogo.Portais {
+					go rotinaPortal(&jogo, &jogo.Portais[i])
+				}
+			}
+		}
+	}()
+
 }
