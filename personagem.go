@@ -1,67 +1,54 @@
 // personagem.go - Funções para movimentação e ações do personagem
 package main
 
-
-// Atualiza a posição do personagem com base na tecla pressionada (WASD)
 func personagemMover(tecla rune, jogo *Jogo) {
 	dx, dy := 0, 0
 	switch tecla {
 	case 'w':
-		dy = -1 // Move para cima
+		dy = -1
 	case 'a':
-		dx = -1 // Move para a esquerda
+		dx = -1
 	case 's':
-		dy = 1 // Move para baixo
+		dy = 1
 	case 'd':
-		dx = 1 // Move para a direita
+		dx = 1
 	}
 
 	nx, ny := jogo.PosX+dx, jogo.PosY+dy
-	// Verifica se o movimento é permitido e realiza a movimentação
-	if jogoPodeMoverPara(jogo, nx, ny) {
+	// CORRIGIDO: Adicionado o terceiro argumento 'false', indicando que quem está movendo não é um inimigo.
+	if jogoPodeMoverPara(jogo, nx, ny, false) {
 		jogoMoverElemento(jogo, jogo.PosX, jogo.PosY, dx, dy)
 		jogo.PosX, jogo.PosY = nx, ny
 	}
 }
 
+// CORRIGIDO: A função agora recebe 'canalJogo' para poder enviar eventos.
+func personagemInteragir(jogo *Jogo) {
 
-// Define o que ocorre quando o jogador pressiona a tecla de interação
-// Neste exemplo, apenas exibe uma mensagem de status
-// Você pode expandir essa função para incluir lógica de interação com objetos
-// Define o que ocorre quando o jogador pressiona a tecla de interação
-func personagemInteragir(jogo *Jogo, canal chan EventoJogo) {
-    // Verifica se está na posição da chave
-   if jogo.PosX == 4 && jogo.PosY == 10 && !jogo.TemChave {
-        canal <- EventoJogo{Tipo: "pegarChave"}
-        return
-    }
+	for i := range jogo.Portais {
+		p := &jogo.Portais[i]
+		if p.Ativo && jogo.PosX == p.X && jogo.PosY == p.Y {
+			// Teletransporta o jogador para o destino do portal
+			jogo.PosX = p.DestX
+			jogo.PosY = p.DestY
+			jogo.StatusMsg = "Teleportado via portal!"
+			return // Importante para sair da função após interagir
+		}
+	}
 
-    // verifica se está em cima do portal
-    for i := range jogo.Portais {
-        p := &jogo.Portais[i]
-        if p.Ativo && jogo.PosX == p.X && jogo.PosY == p.Y {
-            p.canalMapa <- Mensagem{Tipo: "Teleporte!", PosX: jogo.PosX, PosY: jogo.PosY}
-            return
-        }
-    }
-
-    jogo.StatusMsg = "Nada para interagir aqui."
+	jogo.StatusMsg = "Nada para interagir aqui."
 }
 
-
-// Processa o evento do teclado e executa a ação correspondente
+// CORRIGIDO: A assinatura da função foi ajustada para receber 'canalJogo'.
 func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
 	switch ev.Tipo {
 	case "sair":
-		// Retorna false para indicar que o jogo deve terminar
 		return false
 	case "interagir":
-		// Executa a ação de interação
-		personagemInteragir(jogo, canalJogo)
+		// Agora 'canalJogo' existe e pode ser passado adiante.
+		personagemInteragir(jogo)
 	case "mover":
-		// Move o personagem com base na tecla
 		personagemMover(ev.Tecla, jogo)
 	}
-
-	return true // Continua o jogo
+	return true
 }
