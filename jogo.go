@@ -35,6 +35,7 @@ type Jogo struct {
 	StatusMsg      string       // mensagem para a barra de status
 	Inimigos       []Posicao    // posições atuais dos inimigos
 	Portais        []portal     // colecao para armazenar os portais ativos
+	TemChave	   bool         // indica se o jogador possui a chave
 }
 
 // Elementos visuais do jogo
@@ -45,6 +46,7 @@ var (
 	Vegetacao  = Elemento{'♣', CorVerde, CorPadrao, false, false}
 	Vazio      = Elemento{' ', CorPadrao, CorPadrao, false, false}
 	Portal     = Elemento{'O', CorAmarelo, CorPadrao, false, true}
+	Chave 	   = Elemento{'🔑', CorAmarelo, CorPadrao, false, true}
 )
 
 // Cria e retorna uma nova instância do jogo
@@ -79,7 +81,7 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 			case Vegetacao.simbolo:
 				e = Vegetacao
 			case Portal.simbolo:
-				portal := NovoPortal(x, y, jogo)
+				portal := NovoPortal()
 				jogo.Portais = append(jogo.Portais, portal)
 				e = Vazio // o portal será desenhado depois
 			case Personagem.simbolo:
@@ -194,4 +196,10 @@ func gerenciarMapa(jogo *Jogo, canal chan Movimento) {
 			mov.Result <- false
 		}
 	}
+}
+
+
+func posicionarChave(jogo *Jogo) {
+	chaveX, chaveY := 5, 10
+	jogo.Mapa[chaveY][chaveX] = Chave
 }

@@ -26,6 +26,8 @@ func main() {
 		panic(err)
 	}
 
+	posicionarChave(&jogo) //posiciona a chave no mapa
+
 	// Inicializa os portais
 	inicializarPortais(&jogo)
 

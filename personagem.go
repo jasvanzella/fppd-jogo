@@ -28,20 +28,36 @@ func personagemMover(tecla rune, jogo *Jogo) {
 // Neste exemplo, apenas exibe uma mensagem de status
 // Você pode expandir essa função para incluir lógica de interação com objetos
 // Define o que ocorre quando o jogador pressiona a tecla de interação
-func personagemInteragir(jogo *Jogo) {	//novo
-	for i := range jogo.Portais {
-		p := &jogo.Portais[i]
-		if p.Ativo && jogo.PosX == p.X && jogo.PosY == p.Y {
-			p.canalMapa <- Mensagem{
-				Tipo: "Teleporte!",
-				PosX: jogo.PosX,
-				PosY: jogo.PosY,
-			}
-			jogo.StatusMsg = "Entrando no portal..."
-			return
-		}
-	}
-	jogo.StatusMsg = "Nada para interagir aqui."
+func personagemInteragir(jogo *Jogo) {
+    // Verifica se está na posição da chave
+    chaveX, chaveY := 5, 5 // posição fixa da chave no mapa
+    if jogo.PosX == chaveX && jogo.PosY == chaveY && !jogo.TemChave {
+        jogo.TemChave = true
+        jogo.StatusMsg = "Você pegou a chave! O portal foi liberado."
+        jogo.Mapa[chaveY][chaveX] = Vazio // remove a chave do mapa
+
+        // Inicializa a rotina do portal (aparece e desaparece)
+        if len(jogo.Portais) > 0 {
+            go rotinaPortal(jogo, &jogo.Portais[0])
+        }
+        return
+    }
+
+    // Agora verifica portais
+    for i := range jogo.Portais {
+        p := &jogo.Portais[i]
+        if p.Ativo && jogo.PosX == p.X && jogo.PosY == p.Y {
+            p.canalMapa <- Mensagem{
+                Tipo: "Teleporte!",
+                PosX: jogo.PosX,
+                PosY: jogo.PosY,
+            }
+            jogo.StatusMsg = "Entrando no portal..."
+            return
+        }
+    }
+
+    jogo.StatusMsg = "Nada para interagir aqui."
 }
 
 

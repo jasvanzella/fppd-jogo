@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math/rand"
 	"time"
 )
 
@@ -19,20 +18,24 @@ type portal struct {
 	DestX, DestY int
 }
 
+const (	// coordenadas fixas para o portal 
+    PortalX = 10
+    PortalY = 5
+    DestX   = 20
+    DestY   = 15
+)
+
 // Cria um novo portal com destino aleatório válido
-func NovoPortal(x, y int, jogo *Jogo) portal {
-	min := 15
-	max := 30
-	destX, destY := encontrarDestinoValido(jogo)
-	return portal{
-		X:          x,
-		Y:          y,
-		Ativo:      true,
-		canalMapa:  make(chan Mensagem, 1),
-		tempoAtivo: time.Duration(rand.Intn(max-min+1)+min) * time.Second,
-		DestX:      destX,
-		DestY:      destY,
-	}
+func NovoPortal() portal {
+    return portal{
+        X:          PortalX,
+        Y:          PortalY,
+        Ativo:      false,                // começa fechado
+        canalMapa:  make(chan Mensagem, 1),
+        tempoAtivo: 3 * time.Second,      // abre/fecha a cada 3 segundos (pode ajustar)
+        DestX:      DestX,
+        DestY:      DestY,
+    }
 }
 
 // Inicializa todos os portais do mapa
@@ -67,17 +70,6 @@ func rotinaPortal(jogo *Jogo, p *portal) {
 				p.Ativo = true
 			}
 			interfaceDesenharJogo(jogo)
-		}
-	}
-}
-
-// Encontra posição válida para o destino do portal
-func encontrarDestinoValido(jogo *Jogo) (int, int) {
-	for {
-		y := rand.Intn(len(jogo.Mapa))
-		x := rand.Intn(len(jogo.Mapa[y]))
-		if !jogo.Mapa[y][x].tangivel {
-			return x, y
 		}
 	}
 }
