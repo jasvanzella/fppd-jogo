@@ -23,6 +23,13 @@ type EventoJogo struct {
 	Data any
 }
 
+// NOVO: Struct para o baú.
+type Bau struct {
+	X, Y int
+	Visivel bool
+}
+
+// MODIFICADO: A struct Jogo agora tem uma única instância do baú.
 type Jogo struct {
 	Mapa           [][]Elemento
 	PosX, PosY     int
@@ -30,21 +37,25 @@ type Jogo struct {
 	StatusMsg      string
 	Inimigos       []*Inimigo
 	Portais        []portal
+	Bau            Bau // Única instância do baú
 }
 
 var (
 	Personagem      = Elemento{'☺', CorCinzaEscuro, CorPadrao, true, false}
-	ElementoInimigo = Elemento{'☠', CorVermelho, CorPadrao, true, true} // Renomeado
+	ElementoInimigo = Elemento{'☠', CorVermelho, CorPadrao, true, true}
 	Parede          = Elemento{'▤', CorParede, CorFundoParede, true, false}
 	Vegetacao       = Elemento{'♣', CorVerde, CorPadrao, false, false}
 	Vazio           = Elemento{' ', CorPadrao, CorPadrao, false, false}
 	Portal          = Elemento{'O', CorAmarelo, CorPadrao, false, true}
+	// NOVO: Elemento para o baú.
+	BauElemento      = Elemento{'B', CorAmarelo, CorPadrao, true, true}
 )
 
 func jogoNovo() Jogo {
 	return Jogo{
 		UltimoVisitado: Vazio,
 		Inimigos:       []*Inimigo{},
+		// O baú não é inicializado aqui, mas ao carregar o mapa.
 	}
 }
 
@@ -66,7 +77,7 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 			switch ch {
 			case Parede.simbolo:
 				e = Parede
-			case ElementoInimigo.simbolo: // Usando a variável correta
+			case ElementoInimigo.simbolo:
 				e = Vazio
 				novoInimigo := &Inimigo{
 					ID:   inimigoIDCounter,
@@ -82,6 +93,12 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 				portal := NovoPortal()
 				jogo.Portais = append(jogo.Portais, portal)
 				e = Vazio
+			// NOVO: Adicionar o 'B' para ler o baú do mapa e inicializá-lo.
+			case 'B':
+				jogo.Bau.X = x
+				jogo.Bau.Y = y
+				jogo.Bau.Visivel = true // Começa visível
+				e = BauElemento
 			case Personagem.simbolo:
 				jogo.PosX, jogo.PosY = x, y
 			}
