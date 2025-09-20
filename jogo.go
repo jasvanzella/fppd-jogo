@@ -10,10 +10,11 @@ import (
 
 // Elemento representa qualquer objeto do mapa (parede, personagem, vegetação, etc)
 type Elemento struct {
-	simbolo  rune
-	cor      Cor
-	corFundo Cor
-	tangivel bool // Indica se o elemento bloqueia passagem
+	simbolo     rune
+	cor         Cor
+	corFundo    Cor
+	tangivel    bool // Indica se o elemento bloqueia passagem
+	interagivel bool // Indica se o elemento pode ser interagido
 }
 
 type Posicao struct {
@@ -33,15 +34,17 @@ type Jogo struct {
 	UltimoVisitado Elemento     // elemento que estava na posição do personagem antes de mover
 	StatusMsg      string       // mensagem para a barra de status
 	Inimigos       []Posicao    // posições atuais dos inimigos
+	Portais        []portal     // colecao para armazenar os portais ativos
 }
 
 // Elementos visuais do jogo
 var (
-	Personagem = Elemento{'☺', CorCinzaEscuro, CorPadrao, true}
-	Inimigo    = Elemento{'☠', CorVermelho, CorPadrao, true}
-	Parede     = Elemento{'▤', CorParede, CorFundoParede, true}
-	Vegetacao  = Elemento{'♣', CorVerde, CorPadrao, false}
-	Vazio      = Elemento{' ', CorPadrao, CorPadrao, false}
+	Personagem = Elemento{'☺', CorCinzaEscuro, CorPadrao, true, false}
+	Inimigo    = Elemento{'☠', CorVermelho, CorPadrao, true, true}
+	Parede     = Elemento{'▤', CorParede, CorFundoParede, true, false}
+	Vegetacao  = Elemento{'♣', CorVerde, CorPadrao, false, false}
+	Vazio      = Elemento{' ', CorPadrao, CorPadrao, false, false}
+	Portal     = Elemento{'O', CorAmarelo, CorPadrao, false, true}
 )
 
 // Cria e retorna uma nova instância do jogo
@@ -71,10 +74,14 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 			case Parede.simbolo:
 				e = Parede
 			case Inimigo.simbolo:
-				e = Inimigo
+				e = Vazio                                            // o inimigo será desenhado depois
 				jogo.Inimigos = append(jogo.Inimigos, Posicao{x, y}) // adiciona a posição do inimigo
 			case Vegetacao.simbolo:
 				e = Vegetacao
+			case Portal.simbolo:
+				portal := NovoPortal(x, y, jogo)
+				jogo.Portais = append(jogo.Portais, portal)
+				e = Vazio // o portal será desenhado depois
 			case Personagem.simbolo:
 				jogo.PosX, jogo.PosY = x, y // registra a posição inicial do personagem
 			}
@@ -82,11 +89,21 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 		}
 		jogo.Mapa = append(jogo.Mapa, linhaElems)
 		y++
+
+		for i := range jogo.Portais { //novo
+			p := &jogo.Portais[i]
+			// desenha portal na posição inicial
+			jogo.Mapa[p.Y][p.X] = Portal
+			// desenha destino do portal
+			elemDestino := Elemento{'╬', CorAmarelo, CorPadrao, false, true}
+			jogo.Mapa[p.DestY][p.DestX] = elemDestino
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		return err
 	}
 	return nil
+
 }
 
 // Verifica se o personagem pode se mover para a posição (x, y)
@@ -101,6 +118,11 @@ func jogoPodeMoverPara(jogo *Jogo, x, y int) bool {
 		return false
 	}
 
+	if jogo.Mapa[y][x].simbolo == Inimigo.simbolo {
+		interfaceFinalizar()
+		os.Exit(0)
+		// termina o jogo
+	}
 	// Verifica se o elemento de destino é tangível (bloqueia passagem)
 	if jogo.Mapa[y][x].tangivel {
 		return false

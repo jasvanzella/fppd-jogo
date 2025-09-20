@@ -17,17 +17,21 @@ func main() {
 		mapaFile = os.Args[1]
 	}
 
+	// --- Cria o canal de movimento aqui ---
+	var canalMovimento = make(chan Movimento)
+
 	// Inicializa o jogo
 	jogo := jogoNovo()
 	if err := jogoCarregarMapa(mapaFile, &jogo); err != nil {
 		panic(err)
 	}
 
+	// Inicializa os portais
+	inicializarPortais(&jogo)
+
 	// Desenha o estado inicial do jogo
 	interfaceDesenharJogo(&jogo)
 
-	// --- Cria o canal de movimento aqui ---
-	var canalMovimento = make(chan Movimento)
 
 	// Inicia a goroutine que gerencia todas as alterações do mapa
 	go gerenciarMapa(&jogo, canalMovimento)
@@ -35,6 +39,7 @@ func main() {
 	for _, inimigo := range jogo.Inimigos {
 		go moverInimigo(inimigo.X, inimigo.Y, canalMovimento)
 	}
+
 
 	// --- Inicia a goroutine que redesenha a tela continuamente ---
 	go func() {

@@ -1,7 +1,6 @@
 // personagem.go - Funções para movimentação e ações do personagem
 package main
 
-import "fmt"
 
 // Atualiza a posição do personagem com base na tecla pressionada (WASD)
 func personagemMover(tecla rune, jogo *Jogo) {
@@ -28,10 +27,23 @@ func personagemMover(tecla rune, jogo *Jogo) {
 // Define o que ocorre quando o jogador pressiona a tecla de interação
 // Neste exemplo, apenas exibe uma mensagem de status
 // Você pode expandir essa função para incluir lógica de interação com objetos
-func personagemInteragir(jogo *Jogo) {
-	// Atualmente apenas exibe uma mensagem de status
-	jogo.StatusMsg = fmt.Sprintf("Interagindo em (%d, %d)", jogo.PosX, jogo.PosY)
+// Define o que ocorre quando o jogador pressiona a tecla de interação
+func personagemInteragir(jogo *Jogo) {	//novo
+	for i := range jogo.Portais {
+		p := &jogo.Portais[i]
+		if p.Ativo && jogo.PosX == p.X && jogo.PosY == p.Y {
+			p.canalMapa <- Mensagem{
+				Tipo: "Teleporte!",
+				PosX: jogo.PosX,
+				PosY: jogo.PosY,
+			}
+			jogo.StatusMsg = "Entrando no portal..."
+			return
+		}
+	}
+	jogo.StatusMsg = "Nada para interagir aqui."
 }
+
 
 // Processa o evento do teclado e executa a ação correspondente
 func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
@@ -46,6 +58,6 @@ func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
 		// Move o personagem com base na tecla
 		personagemMover(ev.Tecla, jogo)
 	}
-	
+
 	return true // Continua o jogo
 }
