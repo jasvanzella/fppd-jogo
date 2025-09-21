@@ -1,6 +1,10 @@
 // personagem.go - Funções para movimentação e ações do personagem
 package main
 
+import (
+	"os"
+)
+
 func personagemMover(tecla rune, jogo *Jogo) {
 	dx, dy := 0, 0
 	switch tecla {
@@ -34,6 +38,14 @@ func personagemInteragir(jogo *Jogo) {
 			jogo.StatusMsg = "Teleportado via portal!"
 			return // Importante para sair da função após interagir
 		}
+	}
+
+	// Interação com o baú
+	if jogo.Bau.Ativo && jogo.PosX == jogo.Bau.X && jogo.PosY == jogo.Bau.Y {
+		jogo.StatusMsg = "Você encontrou o baú!"
+		interfaceFinalizar()
+		println("Parabéns! Você encontrou o baú. Fim de jogo.")
+		os.Exit(0) // Termina o jogo aqui
 	}
 
 	jogo.StatusMsg = "Nada para interagir aqui."

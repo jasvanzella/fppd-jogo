@@ -30,7 +30,7 @@ type Jogo struct {
 	StatusMsg      string
 	Inimigos       []*Inimigo
 	Portais        []portal
-	Baus 		   []bau
+	Bau	           Bau
 }
 
 var (
@@ -40,7 +40,7 @@ var (
 	Vegetacao       = Elemento{'♣', CorVerde, CorPadrao, false, false}
 	Vazio           = Elemento{' ', CorPadrao, CorPadrao, false, false}
 	Portal          = Elemento{'O', CorAmarelo, CorPadrao, false, true}
-	Bau 			= Elemento{'B', CorRoxo, CorPadrao, false, true}
+	BauJogo 		= Elemento{'B', CorRoxo, CorPadrao, false, true}
 )
 
 func jogoNovo() Jogo {
@@ -84,10 +84,9 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 				portal := NovoPortal()
 				jogo.Portais = append(jogo.Portais, portal)
 				e = Vazio
-			case Bau.simbolo:
-				bau := NovoBau()
-				jogo.Baus = append(jogo.Baus, bau)
-				e = Vazio
+			case BauJogo.simbolo:
+				jogo.Bau = NovoBau(x, y) 
+				e = Vazio // bau não é um elemento do mapa inicialmente
 			case Personagem.simbolo:
 				jogo.PosX, jogo.PosY = x, y
 			}

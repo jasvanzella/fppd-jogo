@@ -1,29 +1,21 @@
-//bau.go - logica e estrutura do bau
+// bau.go - logica do bau
 package main
 
 import (
 	"time"
 )
 
-// type mensagem ja declarada em portal, nao precisa repetir
-
-type bau struct {
-	X, Y         int
-	Ativo        bool
+type Bau struct {
+	X, Y    int
+	Ativo bool
 	tempoAtivo   time.Duration
-	DestX, DestY int
 }
 
-const ( // coordenadas fixas para o portal
-	BauX = 10
-	BauY = 5
-)
-
-// Cria um novo portal com destino aleatório válido
-func NovoBau() bau {
-	return bau{
-		X:          BauX,
-		Y:          BauY,
+// NovoBau cria e retorna uma nova instância do Baú com as coordenadas fornecidas.
+func NovoBau(x, y int) Bau {
+	return Bau{
+		X:       x,
+		Y:       y,
 		Ativo:      false, // começa fechado
 		tempoAtivo: 3 * time.Second, // abre/fecha a cada 3 segundos (pode ajustar)
 	}

@@ -17,6 +17,7 @@ func gerenciarEventos(
 	canalTeclado <-chan EventoTeclado,
 	canalPedidosInimigos <-chan PedidoAtualizacao,
 	canalTickPortal <-chan struct{},
+	canalTickBau <-chan struct{}, // canal p bau
 ) {
 	// Loop de jogo principal.
 	for {
@@ -72,6 +73,10 @@ func gerenciarEventos(
 
 			pedido.Resposta <- *inimigo
 
+		// NOVO CASE PARA GERENCIAR O BAÚ
+		case <-canalTickBau:
+			jogo.Bau.Ativo = !jogo.Bau.Ativo
+
 		// NOVO CASE ADICIONADO DENTRO DO SELECT
 		case <-canalTickPortal:
 			elemDestino := Elemento{'╬', CorAmarelo, CorPadrao, false, true}
@@ -93,6 +98,13 @@ func gerenciarEventos(
 
 		// --- LÓGICA DE DESENHO (RENDERING) ---
 		// (Essa parte já estava correta, mas agora não dará mais erro)
+
+		if jogo.Bau.Ativo {
+			jogo.Mapa[jogo.Bau.Y][jogo.Bau.X] = BauJogo
+		} else {
+			jogo.Mapa[jogo.Bau.Y][jogo.Bau.X] = Vazio
+		} 
+
 		for _, inimigo := range jogo.Inimigos {
 			if jogo.Mapa[inimigo.Y][inimigo.X].simbolo == ElementoInimigo.simbolo {
 				jogo.Mapa[inimigo.Y][inimigo.X] = Vazio
@@ -119,6 +131,7 @@ func main() {
 	canalTeclado := make(chan EventoTeclado)
 	canalPedidosInimigos := make(chan PedidoAtualizacao)
 	canalTickPortal := make(chan struct{})
+	canalTickBau := make(chan struct{})
 
 	// CORREÇÃO AQUI: Adicionado () no final para chamar a função
 	go func() {
@@ -129,6 +142,15 @@ func main() {
 			canalTickPortal <- struct{}{}
 		}
 	}() // <<--- PARÊNTESES ADICIONADOS AQUI
+
+		go func() {
+		ticker := time.NewTicker(4 * time.Second)
+		defer ticker.Stop()
+		for {
+			<-ticker.C
+			canalTickBau <- struct{}{}
+		}
+	}()
 
 	jogo := jogoNovo()
 	if err := jogoCarregarMapa(mapaFile, &jogo); err != nil {
@@ -146,5 +168,5 @@ func main() {
 		go rotinaInimigo(inimigo.ID, canalPedidosInimigos)
 	}
 
-	gerenciarEventos(&jogo, canalTeclado, canalPedidosInimigos, canalTickPortal)
+	gerenciarEventos(&jogo, canalTeclado, canalPedidosInimigos, canalTickPortal, canalTickBau)
 }
