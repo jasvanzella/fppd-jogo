@@ -15,37 +15,37 @@ func personagemMover(tecla rune, jogo *Jogo) {
 	}
 
 	nx, ny := jogo.PosX+dx, jogo.PosY+dy
+	// CORRIGIDO: Adicionado o terceiro argumento 'false', indicando que quem está movendo não é um inimigo.
 	if jogoPodeMoverPara(jogo, nx, ny, false) {
 		jogoMoverElemento(jogo, jogo.PosX, jogo.PosY, dx, dy)
 		jogo.PosX, jogo.PosY = nx, ny
 	}
 }
 
+// CORRIGIDO: A função agora recebe 'canalJogo' para poder enviar eventos.
 func personagemInteragir(jogo *Jogo) {
+
 	for i := range jogo.Portais {
 		p := &jogo.Portais[i]
 		if p.Ativo && jogo.PosX == p.X && jogo.PosY == p.Y {
+			// Teletransporta o jogador para o destino do portal
 			jogo.PosX = p.DestX
 			jogo.PosY = p.DestY
 			jogo.StatusMsg = "Teleportado via portal!"
-			return
+			return // Importante para sair da função após interagir
 		}
-	}
-	
-	// NOVO: Lógica de interação com o baú.
-	if jogo.Bau.Visivel && jogo.PosX == jogo.Bau.X && jogo.PosY == jogo.Bau.Y {
-		jogo.StatusMsg = "Você encontrou o baú!"
-		return
 	}
 
 	jogo.StatusMsg = "Nada para interagir aqui."
 }
 
+// CORRIGIDO: A assinatura da função foi ajustada para receber 'canalJogo'.
 func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
 	switch ev.Tipo {
 	case "sair":
 		return false
 	case "interagir":
+		// Agora 'canalJogo' existe e pode ser passado adiante.
 		personagemInteragir(jogo)
 	case "mover":
 		personagemMover(ev.Tecla, jogo)

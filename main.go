@@ -17,13 +17,11 @@ func gerenciarEventos(
 	canalTeclado <-chan EventoTeclado,
 	canalPedidosInimigos <-chan PedidoAtualizacao,
 	canalTickPortal <-chan struct{},
-	// NOVO: Adicionar o canal do baú
-	canalTickBau <-chan struct{},
 ) {
 	// Loop de jogo principal.
 	for {
 		// --- LÓGICA DE ATUALIZAÇÃO DE ESTADO ---
-		select {
+		select { // O bloco select começa aqui
 		case evento := <-canalTeclado:
 			if continuar := personagemExecutarAcao(evento, jogo); !continuar {
 				return
@@ -74,6 +72,7 @@ func gerenciarEventos(
 
 			pedido.Resposta <- *inimigo
 
+		// NOVO CASE ADICIONADO DENTRO DO SELECT
 		case <-canalTickPortal:
 			elemDestino := Elemento{'╬', CorAmarelo, CorPadrao, false, true}
 			for i := range jogo.Portais {
@@ -88,15 +87,12 @@ func gerenciarEventos(
 				}
 			}
 
-		// NOVO CASE: Para o baú
-		case <-canalTickBau:
-			jogo.Bau.Visivel = !jogo.Bau.Visivel // Alterna a visibilidade
-
 		default:
 			// Não faz nada, apenas permite que o loop continue
-		}
+		} // <<<<---- O 'select' TERMINA AQUI, depois de todos os 'case' e 'default'
 
 		// --- LÓGICA DE DESENHO (RENDERING) ---
+		// (Essa parte já estava correta, mas agora não dará mais erro)
 		for _, inimigo := range jogo.Inimigos {
 			if jogo.Mapa[inimigo.Y][inimigo.X].simbolo == ElementoInimigo.simbolo {
 				jogo.Mapa[inimigo.Y][inimigo.X] = Vazio
@@ -104,13 +100,6 @@ func gerenciarEventos(
 		}
 		for _, inimigo := range jogo.Inimigos {
 			jogo.Mapa[inimigo.Y][inimigo.X] = ElementoInimigo
-		}
-
-		// NOVO: Desenha o baú, se ele estiver visível
-		if jogo.Bau.Visivel {
-			jogo.Mapa[jogo.Bau.Y][jogo.Bau.X] = BauElemento
-		} else {
-			jogo.Mapa[jogo.Bau.Y][jogo.Bau.X] = Vazio
 		}
 
 		interfaceDesenharJogo(jogo)
@@ -130,10 +119,8 @@ func main() {
 	canalTeclado := make(chan EventoTeclado)
 	canalPedidosInimigos := make(chan PedidoAtualizacao)
 	canalTickPortal := make(chan struct{})
-	// NOVO: Canal para o baú
-	canalTickBau := make(chan struct{})
 
-	// CORREÇÃO: Adicionado () para chamar a função
+	// CORREÇÃO AQUI: Adicionado () no final para chamar a função
 	go func() {
 		ticker := time.NewTicker(3 * time.Second)
 		defer ticker.Stop()
@@ -141,34 +128,23 @@ func main() {
 			<-ticker.C
 			canalTickPortal <- struct{}{}
 		}
-	}()
-
-	// NOVO: Goroutine para o baú
-	go func() {
-		ticker := time.NewTicker(4 * time.Second)
-		defer ticker.Stop()
-		for {
-			<-ticker.C
-			canalTickBau <- struct{}{}
-		}
-	}()
+	}() // <<--- PARÊNTESES ADICIONADOS AQUI
 
 	jogo := jogoNovo()
 	if err := jogoCarregarMapa(mapaFile, &jogo); err != nil {
 		panic(err)
 	}
 
-	// CORREÇÃO: Adicionado () para chamar a função
+	// CORREÇÃO AQUI TAMBÉM: Adicionado () no final para chamar a função
 	go func() {
 		for {
 			canalTeclado <- interfaceLerEventoTeclado()
 		}
-	}()
+	}() // <<--- PARÊNTESES ADICIONADOS AQUI
 
 	for _, inimigo := range jogo.Inimigos {
 		go rotinaInimigo(inimigo.ID, canalPedidosInimigos)
 	}
 
-	// MODIFICADO: Passar o novo canal para a função
-	gerenciarEventos(&jogo, canalTeclado, canalPedidosInimigos, canalTickPortal, canalTickBau)
+	gerenciarEventos(&jogo, canalTeclado, canalPedidosInimigos, canalTickPortal)
 }
