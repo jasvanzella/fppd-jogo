@@ -106,4 +106,10 @@ func interfaceDesenharBarraDeStatus(jogo *Jogo) {
 	for i, c := range msg {
 		termbox.SetCell(i, len(jogo.Mapa)+3, c, CorTexto, CorPadrao)
 	}
+
+	msg2 := "Seu objetivo é encontrar o bau (★). Os inimigos sao mortais, tome cuidado!"
+	for i, c := range msg2 {
+		termbox.SetCell(i, len(jogo.Mapa)+4, c, CorTexto, CorPadrao)
+	}
+
 }
