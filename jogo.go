@@ -40,7 +40,7 @@ var (
 	Vegetacao       = Elemento{'♣', CorVerde, CorPadrao, false, false}
 	Vazio           = Elemento{' ', CorPadrao, CorPadrao, false, false}
 	Portal          = Elemento{'O', CorAmarelo, CorPadrao, false, true}
-	BauJogo 		= Elemento{'B', CorRoxo, CorPadrao, false, true}
+	BauJogo 		= Elemento{'★', CorRoxo, CorPadrao, false, true}
 )
 
 func jogoNovo() Jogo {
