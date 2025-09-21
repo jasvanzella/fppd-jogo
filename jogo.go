@@ -30,7 +30,7 @@ type Jogo struct {
 	StatusMsg      string
 	Inimigos       []*Inimigo
 	Portais        []portal
-	Bau	           Bau
+	Bau            Bau
 }
 
 var (
@@ -40,7 +40,7 @@ var (
 	Vegetacao       = Elemento{'♣', CorVerde, CorPadrao, false, false}
 	Vazio           = Elemento{' ', CorPadrao, CorPadrao, false, false}
 	Portal          = Elemento{'O', CorAmarelo, CorPadrao, false, true}
-	BauJogo 		= Elemento{'★', CorRoxo, CorPadrao, false, true}
+	BauJogo         = Elemento{'★', CorRoxo, CorPadrao, false, true}
 )
 
 func jogoNovo() Jogo {
@@ -85,7 +85,7 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 				jogo.Portais = append(jogo.Portais, portal)
 				e = Vazio
 			case BauJogo.simbolo:
-				jogo.Bau = NovoBau(x, y) 
+				jogo.Bau = NovoBau(x, y)
 				e = Vazio // bau não é um elemento do mapa inicialmente
 			case Personagem.simbolo:
 				jogo.PosX, jogo.PosY = x, y
@@ -99,7 +99,7 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 	for i := range jogo.Portais {
 		p := &jogo.Portais[i]
 		jogo.Mapa[p.Y][p.X] = Portal
-		elemDestino := Elemento{'╬', CorAmarelo, CorPadrao, false, true}
+		elemDestino := Elemento{'◊', CorAmarelo, CorPadrao, false, true}
 		jogo.Mapa[p.DestY][p.DestX] = elemDestino
 	}
 	return scanner.Err()

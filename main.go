@@ -79,7 +79,7 @@ func gerenciarEventos(
 
 		// NOVO CASE ADICIONADO DENTRO DO SELECT
 		case <-canalTickPortal:
-			elemDestino := Elemento{'╬', CorAmarelo, CorPadrao, false, true}
+			elemDestino := Elemento{'◊', CorAmarelo, CorPadrao, false, true}
 			for i := range jogo.Portais {
 				p := &jogo.Portais[i]
 				p.Ativo = !p.Ativo // Alterna o estado
