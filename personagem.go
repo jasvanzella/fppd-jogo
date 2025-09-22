@@ -19,14 +19,14 @@ func personagemMover(tecla rune, jogo *Jogo) {
 	}
 
 	nx, ny := jogo.PosX+dx, jogo.PosY+dy
-	// CORRIGIDO: Adicionado o terceiro argumento 'false', indicando que quem está movendo não é um inimigo.
+	// adicionado o terceiro argumento 'false', indicando que quem está movendo não é um inimigo.
 	if jogoPodeMoverPara(jogo, nx, ny, false) {
 		jogoMoverElemento(jogo, jogo.PosX, jogo.PosY, dx, dy)
 		jogo.PosX, jogo.PosY = nx, ny
 	}
 }
 
-// CORRIGIDO: A função agora recebe 'canalJogo' para poder enviar eventos.
+// agora recebe 'canalJogo' para poder enviar eventos.
 func personagemInteragir(jogo *Jogo) {
 
 	for i := range jogo.Portais {
@@ -45,19 +45,18 @@ func personagemInteragir(jogo *Jogo) {
 		jogo.StatusMsg = "Você encontrou o baú!"
 		interfaceFinalizar()
 		println("Parabéns! Você encontrou o baú. Fim de jogo.")
-		os.Exit(0) // Termina o jogo aqui
+		os.Exit(0) // termina o jogo aqui
 	}
 
 	jogo.StatusMsg = "Nada para interagir aqui."
 }
 
-// CORRIGIDO: A assinatura da função foi ajustada para receber 'canalJogo'.
+// a função foi ajustada para receber 'canalJogo'.
 func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
 	switch ev.Tipo {
 	case "sair":
 		return false
 	case "interagir":
-		// Agora 'canalJogo' existe e pode ser passado adiante.
 		personagemInteragir(jogo)
 	case "mover":
 		personagemMover(ev.Tecla, jogo)

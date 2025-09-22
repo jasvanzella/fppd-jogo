@@ -24,7 +24,7 @@ const ( // coordenadas fixas para o portal
 	DestY   = 2
 )
 
-// Cria um novo portal com destino aleatório válido
+// cria um novo portal com destino aleatório válido
 func NovoPortal() portal {
 	return portal{
 		X:          PortalX,

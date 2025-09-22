@@ -6,14 +6,6 @@ import (
 	"os"
 )
 
-type Elemento struct {
-	simbolo     rune
-	cor         Cor
-	corFundo    Cor
-	tangivel    bool
-	interagivel bool
-}
-
 type Posicao struct {
 	X, Y int
 }
@@ -21,6 +13,14 @@ type Posicao struct {
 type EventoJogo struct {
 	Tipo string
 	Data any
+}
+
+type Elemento struct {
+	simbolo     rune
+	cor         Cor
+	corFundo    Cor
+	tangivel    bool
+	interagivel bool
 }
 
 type Jogo struct {
@@ -35,7 +35,7 @@ type Jogo struct {
 
 var (
 	Personagem      = Elemento{'☺', CorCinzaEscuro, CorPadrao, true, false}
-	ElementoInimigo = Elemento{'☠', CorVermelho, CorPadrao, true, true} // Renomeado
+	ElementoInimigo = Elemento{'☠', CorVermelho, CorPadrao, true, true} // renomeado
 	Parede          = Elemento{'▤', CorParede, CorFundoParede, true, false}
 	Vegetacao       = Elemento{'♣', CorVerde, CorPadrao, false, false}
 	Vazio           = Elemento{' ', CorPadrao, CorPadrao, false, false}
@@ -68,7 +68,7 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 			switch ch {
 			case Parede.simbolo:
 				e = Parede
-			case ElementoInimigo.simbolo: // Usando a variável correta
+			case ElementoInimigo.simbolo: 
 				e = Vazio
 				novoInimigo := &Inimigo{
 					ID:   inimigoIDCounter,

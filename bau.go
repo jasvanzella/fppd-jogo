@@ -1,4 +1,5 @@
 // bau.go - logica do bau
+//segue a mesma logica do portal
 package main
 
 import (
@@ -11,7 +12,7 @@ type Bau struct {
 	tempoAtivo   time.Duration
 }
 
-// NovoBau cria e retorna uma nova instância do Baú com as coordenadas fornecidas.
+// cria e retorna uma nova instância do bau 
 func NovoBau(x, y int) Bau {
 	return Bau{
 		X:       x,

@@ -10,19 +10,17 @@ import (
 
 const raioDeVisao = 12.0
 
-// Arquivo: main.go
-
 func gerenciarEventos(
 	jogo *Jogo,
 	canalTeclado <-chan EventoTeclado,
 	canalPedidosInimigos <-chan PedidoAtualizacao,
 	canalTickPortal <-chan struct{},
-	canalTickBau <-chan struct{}, // canal p bau
+	canalTickBau <-chan struct{}, 
 ) {
 	// Loop de jogo principal.
 	for {
-		// --- LÓGICA DE ATUALIZAÇÃO DE ESTADO ---
-		select { // O bloco select começa aqui
+		// logica da atualização de estado
+		select { 
 		case evento := <-canalTeclado:
 			if continuar := personagemExecutarAcao(evento, jogo); !continuar {
 				return
@@ -33,7 +31,7 @@ func gerenciarEventos(
 				jogo.Mapa[inimigo.Y][inimigo.X] = Vazio
 			}
 
-			// --- LÓGICA DE MUDANÇA DE ESTADO COM MENSAGENS ---
+			// logica de mudança de estados com mensagens
 			modoAnterior := inimigo.Modo
 			dist := calcularDistancia(inimigo.X, inimigo.Y, jogo.PosX, jogo.PosY)
 
@@ -73,11 +71,9 @@ func gerenciarEventos(
 
 			pedido.Resposta <- *inimigo
 
-		// NOVO CASE PARA GERENCIAR O BAÚ
 		case <-canalTickBau:
 			jogo.Bau.Ativo = !jogo.Bau.Ativo
 
-		// NOVO CASE ADICIONADO DENTRO DO SELECT
 		case <-canalTickPortal:
 			elemDestino := Elemento{'◊', CorAmarelo, CorPadrao, false, true}
 			for i := range jogo.Portais {
@@ -93,11 +89,7 @@ func gerenciarEventos(
 			}
 
 		default:
-			// Não faz nada, apenas permite que o loop continue
-		} // <<<<---- O 'select' TERMINA AQUI, depois de todos os 'case' e 'default'
-
-		// --- LÓGICA DE DESENHO (RENDERING) ---
-		// (Essa parte já estava correta, mas agora não dará mais erro)
+		} 
 
 		if jogo.Bau.Ativo {
 			jogo.Mapa[jogo.Bau.Y][jogo.Bau.X] = BauJogo
@@ -133,7 +125,6 @@ func main() {
 	canalTickPortal := make(chan struct{})
 	canalTickBau := make(chan struct{})
 
-	// CORREÇÃO AQUI: Adicionado () no final para chamar a função
 	go func() {
 		ticker := time.NewTicker(3 * time.Second)
 		defer ticker.Stop()
@@ -141,7 +132,7 @@ func main() {
 			<-ticker.C
 			canalTickPortal <- struct{}{}
 		}
-	}() // <<--- PARÊNTESES ADICIONADOS AQUI
+	}() 
 
 		go func() {
 		ticker := time.NewTicker(4 * time.Second)
@@ -157,12 +148,12 @@ func main() {
 		panic(err)
 	}
 
-	// CORREÇÃO AQUI TAMBÉM: Adicionado () no final para chamar a função
+	// adicionado () no final para chamar a função
 	go func() {
 		for {
 			canalTeclado <- interfaceLerEventoTeclado()
 		}
-	}() // <<--- PARÊNTESES ADICIONADOS AQUI
+	}() // parenteses aqui tambem
 
 	for _, inimigo := range jogo.Inimigos {
 		go rotinaInimigo(inimigo.ID, canalPedidosInimigos)
